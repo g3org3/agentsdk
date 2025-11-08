@@ -69,7 +69,7 @@ class OllamaClient(LlmClient):
 
 def run():
     # client = OllamaClient(model="gemma3:1b")
-    # client.test() 
+    # client.test()
     client = OllamaClient(model="deepseek-v3.1:671b-cloud")
     client.test()
 

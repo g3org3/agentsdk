@@ -1,27 +1,12 @@
 import asyncio
 import json
-from typing import Literal, TypedDict
 
+from agents import Tool
+from agents.tool_context import ToolContext
+
+from agentsdk.agent_types import AgentAction, ToolDef
 from agentsdk.Chalk import chalk
 from agentsdk.LlmClient import LlmClient, LlmMessage
-from agentsdk.OllamaClient import OllamaClient
-
-
-class ToolDef(TypedDict):
-    name: str
-    description: str
-    parameters: dict[str, str]
-
-
-class ActionTool(TypedDict):
-    name: str
-    reason: str
-    parameters: dict[str, dict[str, str]]
-
-
-class AgentAction(TypedDict):
-    action: Literal["use_tools"]
-    tools_selected: list[ActionTool]
 
 
 class Agent:
@@ -50,9 +35,9 @@ class Agent:
         for tool in self.tools:
             self.tool_by_name[tool.name] = tool
         self.parse_openai_tools(openai_tools or [])
-        with open("./custom_agentsdk/agent_pick_tool_prompt.md") as fh:
+        with open("./agentsdk/agent_pick_tool_prompt.md") as fh:
             self.sytem_promp_tool_resolver = "".join(fh.readlines()).strip()
-        with open("./custom_agentsdk/assitant_prompt.md") as fh:
+        with open("./agentsdk/assistant_prompt.md") as fh:
             self.system_prompt_interpret_answer = "".join(fh.readlines()).strip()
 
     def agent_ask(self, prompt: str) -> AgentAction:
@@ -190,26 +175,3 @@ class Agent:
 
     def clear(self):
         self.history = []
-
-
-
-
-def run():
-    print(f"Detected Tools: [{len(tools[0:2])}]")
-    for tool in tools[0:2]:
-        print(f"  • {tool.name}")
-
-    agent = Agent(
-        name="Agent",
-        model=OllamaClient(model="qwen3-coder:480b-cloud"),
-        openai_tools=tools[0:2],
-        instructions="""
-When the user ask the current sprint, use `get_jira_sprints` to get the active one that is not Devops
-""",
-    )
-    chat = Chat(agent)
-    chat.run()
-
-
-if __name__ == "__main__":
-    run()
