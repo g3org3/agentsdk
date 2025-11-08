@@ -58,6 +58,8 @@ class Agent:
         answer = self.client.request(messages)
         print(f"{chalk.yellow('[DEBUG]')} {chalk.purple(answer)}")
         tools_to_call = answer.replace("```json", "").replace("```", "").strip()
+        tools_to_call = tools_to_call.replace('<|channel|>final <|constrain|>JSON<|message|>', '')
+        tools_to_call = tools_to_call.replace('<|channel|>final <|constrain|>json<|message|>', '')
 
         # TODO: validate with pydantic
         return json.loads(tools_to_call)  # pyright: ignore[reportAny]
