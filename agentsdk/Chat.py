@@ -1,21 +1,86 @@
 #!/usr/bin/env python
+import urllib3
 from agents import Tool, function_tool
 
 from agentsdk.Agent import Agent
+from agentsdk.AnthropicClient import AnthropicClient
 from agentsdk.Chalk import chalk
 from agentsdk.OllamaClient import OllamaClient
+
+urllib3.disable_warnings()
 
 
 class Chat:
     agent: Agent
+    tools: list[Tool]
+    provider: str
+    model: str
 
-    def __init__(self, agent: Agent) -> None:
+    def __init__(
+        self, agent: Agent, tools: list[Tool], provider: str, model: str
+    ) -> None:
         self.agent = agent
+        self.tools = tools
+        self.provider = provider
+        self.model = model
 
     def run(self):
         try:
             while True:
                 user_input = input("---\n> ")
+                if "/model " in user_input:
+                    if self.provider == "claude":
+                        model = user_input.split(' ')[1]
+                        self.agent = Agent(
+                            name="Agent",
+                            model=AnthropicClient(model=model),
+                            openai_tools=self.tools,
+                            instructions="You are a helpful agent",
+                        )
+                        self.model = model
+                        print("Changed agent")
+                        continue
+                    if self.provider == "ollama":
+                        model = user_input.split(' ')[1]
+                        self.agent = Agent(
+                            name="Agent",
+                            model=OllamaClient(model=model),
+                            openai_tools=self.tools,
+                            instructions="You are a helpful agent",
+                        )
+                        self.model = model
+                        print("Changed agent")
+                        continue
+
+                if "/provider " in user_input:
+                    if "claude" in user_input:
+                        self.agent = Agent(
+                            name="Agent",
+                            model=AnthropicClient(model="claude-sonnet-4-5"),
+                            openai_tools=self.tools,
+                            instructions="You are a helpful agent",
+                        )
+                        self.provider = "claude"
+                        print("Changed agent")
+                        continue
+                    if "ollama" in user_input:
+                        self.agent = Agent(
+                            name="Agent",
+                            model=OllamaClient(model="deepseek-v3.1:671b-cloud"),
+                            openai_tools=self.tools,
+                            instructions="You are a helpful agent",
+                        )
+                        self.provider = "ollama"
+                        print("Changed agent")
+                        continue
+                    print(f"Provider doesn't exist {user_input}")
+                    continue
+                if user_input == "/models":
+                    models = self.agent.client.get_models()
+                    print("Available models:")
+                    for model in models:
+                        print(f" - {model}")
+                    continue
                 if user_input == "clear":
                     print(chr(27) + "[2J")
                 answer = self.agent.run_sync(user_input)
@@ -43,7 +108,7 @@ def run():
         openai_tools=tools,
         instructions="You are a helpful agent",
     )
-    chat = Chat(agent)
+    chat = Chat(agent, tools, provider="ollama", model="qwen3-coder:480b-cloud")
     chat.run()
 
 

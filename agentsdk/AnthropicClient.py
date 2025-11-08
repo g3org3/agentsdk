@@ -26,7 +26,7 @@ class AnthropicClient(LlmClient):
 
     @override
     def get_models(self) -> list[str]:
-        res = r.get(f"{self.host}/v1/models", headers=self.headers)
+        res = r.get(f"{self.host}/v1/models", headers=self.headers, verify=False)
         return [m.get("id") for m in res.json().get("data")]
 
     @override
@@ -54,7 +54,7 @@ class AnthropicClient(LlmClient):
             "system": "\n".join(system),
             "messages": non_system,
         }
-        res = r.post(f"{self.host}/v1/messages", json=payload, headers=self.headers)
+        res = r.post(f"{self.host}/v1/messages", json=payload, headers=self.headers, verify=False)
         if res.status_code != 200:
             print(chalk.red(f"[{res.status_code}] '{res.text}'"))
             res.raise_for_status()
